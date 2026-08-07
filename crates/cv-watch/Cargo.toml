@@ -1,0 +1,16 @@
+[package]
+name = "cv-watch"
+description = "Debounced filesystem and git-state watching for code-view."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+notify = { workspace = true }
+thiserror = { workspace = true }

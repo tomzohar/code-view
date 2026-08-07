@@ -1,0 +1,17 @@
+/target
+**/*.rs.bk
+
+# insta snapshot review leftovers
+**/*.snap.new
+**/*.pending-snap
+
+# cv's own review/feedback output (written by the tool, not source)
+/.cv/
+
+# criterion output
+/target/criterion/
+
+# per-developer agent tool permissions, not project config
+/.claude/settings.local.json
+
+.DS_Store

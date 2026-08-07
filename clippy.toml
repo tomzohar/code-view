@@ -1,0 +1,6 @@
+msrv = "1.97"
+
+# Panicking is a bug in cv (it would wreck the user's terminal) but it is the
+# correct way to fail a test.
+allow-unwrap-in-tests = true
+allow-expect-in-tests = true

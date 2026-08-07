@@ -1,0 +1,16 @@
+[package]
+name = "cv-vcs"
+description = "Git access for code-view: status, diffs and file content via gitoxide."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+gix = { workspace = true }
+thiserror = { workspace = true }

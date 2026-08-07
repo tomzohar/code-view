@@ -1,0 +1,25 @@
+[package]
+name = "cv-core"
+description = "Pure domain model and Elm-style reducer for code-view. No I/O, ever."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[lints]
+workspace = true
+
+# cv-core is PURE (docs/ARCHITECTURE.md §1): no I/O, no terminal, no async runtime.
+# Runtime dependencies here are a design smell — justify one in an ADR before adding it.
+[dependencies]
+
+[dev-dependencies]
+criterion = { workspace = true }
+insta = { workspace = true }
+proptest = { workspace = true }
+
+[[bench]]
+name = "reducer"
+harness = false

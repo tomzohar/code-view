@@ -1,0 +1,5 @@
+# Pinned so every agent session and CI runner sees identical clippy/rustfmt behaviour.
+# Bumping this is a normal PR, but expect new clippy lints to fire (CI is -D warnings).
+[toolchain]
+channel = "1.97.1"
+components = ["rustfmt", "clippy"]
