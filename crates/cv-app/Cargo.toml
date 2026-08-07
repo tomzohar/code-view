@@ -11,9 +11,18 @@ authors.workspace = true
 [lints]
 workspace = true
 
+# `bench = false` on every non-criterion target: `cargo bench` would otherwise
+# run libtest's harness here too, and libtest rejects criterion's flags — which
+# breaks `just bench-gate` outright (CV-002).
 [[bin]]
 name = "cv"
 path = "src/main.rs"
+bench = false
+
+[[test]]
+name = "e2e"
+harness = true
+bench = false
 
 [dependencies]
 anyhow = { workspace = true }

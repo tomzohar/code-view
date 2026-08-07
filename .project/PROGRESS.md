@@ -2,6 +2,13 @@
 
 Newest entries at top. Format in MEMORY.md.
 
+## 2026-08-07 · CV-002 · feat: CI pipeline — draft on `cv/002-ci-pipeline`, not merged (session: claude-code)
+- Shipped (unmerged): spec `specs/002-ci-pipeline.md`; `.github/workflows/ci.yml` (4 jobs — L0/L1 on 3 platforms, L2 on unix, L3 + workflow lint on ubuntu); `ci/bench_gate.py` + `ci/coldstart_gate.py`; justfile gains `lock-check`, `bench-baseline`, `bench-gate`, `perf-gate-selftest`, `lint-workflows`.
+- Surprise (real bug, not a CI detail): `cargo bench --workspace` runs libtest's harness for every lib/bin/test target alongside the criterion benches, and libtest rejects `--save-baseline` — the regression gate failed the first time it ran for real. `--benches` doesn't exclude them; `bench = false` per target does. This was invisible until now because `just bench` passes no arguments, so those harnesses ran zero benchmarks and exited 0 — the recipe looked green while benchmarking nothing.
+- Judgement call worth revisiting: a flat 5% criterion comparison would flake constantly on shared runners, so the gate compares the new measurement's CI lower bound against the baseline's CI upper bound × 1.05. Stronger evidence than a point-estimate check, not a laxer threshold — but it is an interpretation of "regressions > 5% fail", and a maintainer should agree with it.
+- Not verified: actionlint isn't installed here, and the repo has no remote, so the workflow has never executed. Reviewed YAML, not proven-green CI.
+- Follow-ups filed: CV-030 (Windows PTY), CV-031 (cold start vs the real fixture), CV-032 (SHA-pin actions), CV-033 (L4 adversarial review).
+
 ## 2026-08-07 · CV-001 · feat: cargo workspace scaffold + dev environment (session: claude-code)
 - Shipped: git repo (`main`); 7-crate workspace under `crates/`; pinned toolchain (1.97.1, edition 2024); workspace-wide dep versions + lints (`unsafe_code = forbid`, `unwrap/expect_used = warn`); justfile covering the whole ladder (check/test/snapshot/e2e/bench/coldstart/review); MIT LICENSE; `AGENTS.md` → `CLAUDE.md` symlink; `.project/specs/` opened.
 - Every rung proven green, not just wired: 6 unit tests, 2 PTY e2e tests (expectrl), criterion bench, hyperfine cold start (1.6 ms against a 50 ms budget — no TUI yet, so treat as a floor).

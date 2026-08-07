@@ -11,6 +11,11 @@ authors.workspace = true
 [lints]
 workspace = true
 
+# Criterion owns benchmarking here; libtest's harness must stay out of
+# `cargo bench`, or it rejects criterion's flags and fails the L3 gate (CV-002).
+[lib]
+bench = false
+
 # cv-core is PURE (docs/ARCHITECTURE.md §1): no I/O, no terminal, no async runtime.
 # Runtime dependencies here are a design smell — justify one in an ADR before adding it.
 [dependencies]

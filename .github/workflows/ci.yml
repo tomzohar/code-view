@@ -1,0 +1,144 @@
+# code-view CI — the validation ladder (docs/SDLC.md §1 Stage 4), enforced.
+#
+# Every gate step below invokes a `just` recipe and nothing else. That is
+# deliberate: docs/SDLC.md §2 makes the justfile the single entry point so the
+# command CI runs is byte-identical to the command an agent runs locally. If you
+# find yourself reaching for `cargo` in this file, add a recipe instead — a gate
+# that can only be reproduced by reading YAML is a gate nobody reproduces.
+#
+# Rungs: L0 fmt+clippy · L1 tests · L2 PTY e2e · L3 perf budgets.
+# L4 (adversarial agent review) is CV-033; L5 (human review in cv) needs M2.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# No secrets are used or needed anywhere in this repo (docs/SDLC.md §3).
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  # Superseded PR runs are wasted work; superseded main runs still seed the
+  # criterion baseline, so they run to completion.
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  check:
+    name: L0+L1 check (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      # One platform's failure shouldn't hide another's — cross-platform bugs
+      # travel in packs.
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      # Resolves the channel and components from rust-toolchain.toml rather than
+      # naming a version here, so a toolchain bump stays a one-line PR that
+      # cannot drift from what agents run locally.
+      - name: Install pinned toolchain
+        run: rustup show
+
+      - uses: Swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: just
+
+      - name: Lockfile is current
+        run: just lock-check
+
+      - name: fmt + clippy + tests
+        run: just check
+
+  e2e:
+    name: L2 e2e (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      # Unix only for now. expectrl's Windows ConPTY support is the least mature
+      # part of that crate, and a flaky gate is a P1 bug (docs/SDLC.md §1).
+      # Windows PTY coverage is CV-030 — to be added when it can be reliable.
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned toolchain
+        run: rustup show
+      - uses: Swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: just
+      - name: PTY scenarios
+        run: just e2e
+
+  perf:
+    name: L3 performance budgets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned toolchain
+        run: rustup show
+      - uses: Swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: just,hyperfine
+
+      # Proves the gate can still fail before trusting it to pass. Cheap
+      # insurance against a perf gate that silently stops gating.
+      - name: Self-test the perf gates
+        run: just perf-gate-selftest
+
+      - name: Cold-start budget (ARCHITECTURE.md §4)
+        run: just coldstart
+
+      # Criterion needs something to compare against. Pushes to main save a
+      # baseline; PRs restore the most recent one. On the very first run there
+      # is none, and the gate says so loudly and passes — failing closed would
+      # block the push that seeds it.
+      - name: Restore criterion baseline from main
+        uses: actions/cache/restore@v4
+        with:
+          path: target/criterion
+          key: criterion-main-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            criterion-main-${{ runner.os }}-
+
+      # The regression gate runs where merges are decided. Pushes to main only
+      # refresh the baseline: re-gating post-merge would either duplicate the
+      # PR's verdict or compare main against itself.
+      - name: Criterion regression gate
+        if: github.event_name == 'pull_request'
+        run: just bench-gate
+
+      - name: Refresh criterion baseline
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: just bench-baseline
+
+      - name: Save criterion baseline
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/cache/save@v4
+        with:
+          path: target/criterion
+          key: criterion-main-${{ runner.os }}-${{ github.sha }}
+
+  workflows:
+    name: Workflow lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: just,actionlint
+      - name: actionlint
+        run: just lint-workflows

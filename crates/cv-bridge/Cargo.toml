@@ -11,6 +11,11 @@ authors.workspace = true
 [lints]
 workspace = true
 
+# Criterion owns benchmarking in this workspace; libtest's harness must stay out
+# of `cargo bench`, or it rejects criterion's flags and fails the L3 gate (CV-002).
+[lib]
+bench = false
+
 [dependencies]
 cv-core = { workspace = true }
 thiserror = { workspace = true }
