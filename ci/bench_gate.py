@@ -128,11 +128,12 @@ def run(criterion_dir: str, baseline: str, candidate: str, threshold: float) -> 
         return EXIT_ERROR
 
     if not base:
-        # Bootstrap case: nothing to compare against yet. Loud, but not fatal —
-        # failing here would block the very push to main that seeds the baseline.
+        # No baseline under this name. In CI `bench-gate-ci` always measures one
+        # first, so this is the local path: someone ran the gate without a
+        # "before". Loud, but not fatal — there is nothing to be wrong about.
         print(f"bench-gate: NO BASELINE named '{baseline}' under {criterion_dir}/.")
         print("bench-gate: nothing to compare against; this run gates nothing.")
-        print("bench-gate: a baseline is saved on the next push to main.")
+        print(f"bench-gate: run `just bench-baseline {baseline}` first to get one.")
         return EXIT_OK
 
     regressions, lines = compare(base, new, threshold)
