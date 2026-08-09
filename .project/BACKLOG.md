@@ -34,6 +34,7 @@ Format: `- [ ] CV-<id> (<tags>, <milestone>) <summary>`. IDs are permanent. Prio
 
 ## Icebox
 
+- [ ] CV-029 [proposed] (docs) Re-arrange the repo to suit the installed agent skills instead of fighting them. Move `.project/decisions/` → `docs/adr/` (the layout `mattpocock-skills:domain-modeling` writes to), adopt a root `CONTEXT.md` glossary for ubiquitous language, and restructure `docs/ARCHITECTURE.md` around deep-module vocabulary (interfaces, seams, depth) so `mattpocock-skills:codebase-design` and the docs speak the same language. Update the ADR path in `CLAUDE.md` §Hard rules and drop the CV-029 caveat from §Skill routing when done. Consider running `/mattpocock-skills:setup-matt-pocock-skills` to scaffold this rather than doing it by hand.
 - [ ] CV-027 [proposed] (infra) Add `cargo deny` (licence + advisory audit) to the ladder — an MIT project shipping static binaries should assert its dependency licences.
 - [ ] CV-028 [proposed] (infra) Bundle tree-sitter grammars with lazy loading; `cv_syntax::grammar_count()` returns 0 until then.
 - [ ] CV-024 [proposed] (ux) Kitty/sixel image rendering for image diffs.

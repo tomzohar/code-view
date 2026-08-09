@@ -29,6 +29,25 @@ Workspace crates under `crates/`, strict downward deps: `cv-app` (CLI) → `cv-u
 - If your change wants to exceed the spec's file scope by ~20%, STOP and ask / file a spec amendment.
 - Performance budgets (ARCHITECTURE.md §4) are release blockers — check `just bench` before opening a PR.
 
+## Skill routing (several installed skills overlap — these win)
+
+Many skills claim the same triggers. For code-view, prefer these and ignore the competing ones:
+
+| Task | Use | Not |
+| --- | --- | --- |
+| Reviewing a change | `mattpocock-skills:code-review` (Standards + Spec axes, reviews since a fixed commit) | `engineering:code-review` |
+| Module/interface design, seams, testability | `mattpocock-skills:codebase-design` | `engineering:system-design` (service-oriented, wrong shape for a local TUI) |
+| ADRs, domain terminology | `mattpocock-skills:domain-modeling` | `engineering:architecture` |
+| Test-first work | `mattpocock-skills:tdd` | `engineering:testing-strategy` |
+| Stress-testing a plan or decision | `mattpocock-skills:grilling`, `/mattpocock-skills:grill-me` | `product-management:product-brainstorming` |
+| Editing this file, AGENTS.md, or a skill | `mattpocock-skills:writing-for-agents` | — |
+
+Hard bugs: `/mattpocock-skills:diagnosing-bugs` is deliberate-invocation only (it generates a
+human-in-the-loop script and is heavy for routine failures). Routine test failures → `engineering:debug`.
+
+Until CV-029 lands, the repo's own conventions still win over any skill's defaults — most importantly
+ADRs live in `.project/decisions/` using `ADR-TEMPLATE.md`, not `docs/adr/`.
+
 ## Definition of done (a PR without this is not done)
 
 Tests green through the ladder (docs/SDLC.md §1 L0–L3) → append a `.project/PROGRESS.md` entry → tick/move the backlog item → file follow-up items you discovered → update this file if you learned a missing convention.
