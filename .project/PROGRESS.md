@@ -2,6 +2,14 @@
 
 Newest entries at top. Format in MEMORY.md.
 
+## 2026-08-09 · CV-002 · integrate: CI pipeline merged to main (session: claude-code)
+- Supersedes the entry below, which was written while the work was still an unmerged draft. `cv/002-ci-pipeline` rebased onto main, every rung run locally and green — `lock-check`, `check` (fmt/clippy/6 tests), `lint-workflows` (actionlint clean), `e2e` (2 PTY tests), `perf-gate-selftest`, `coldstart` (1.9 ms ± 0.3 against the 50 ms budget), and the real `bench-baseline` → `bench-gate` round trip. Worktree and branch deleted.
+- Fixed a permanent-ID collision: the draft and a concurrent main-branch commit both claimed CV-029. Main's (repo layout vs. skill defaults) keeps the number; the draft's L4 adversarial review became CV-033. Renumbering touched the draft's own PROGRESS line — the one edit to history this session, made before it merged, because a duplicate permanent ID is worse than a corrected draft.
+- Installed `actionlint` (missing when the draft was written), so the workflow lint the draft could only reason about is now actually proven clean.
+- Still not verified: the repo has no git remote, so `.github/workflows/ci.yml` has never executed. The ladder is real locally and aspirational in CI. Filed CV-034 to close that.
+- Judgement calls inherited from the draft and still open for a maintainer: the spec was never approved before the build (SDLC Stage 1), and the criterion gate reads "regressions > 5% fail" as a confidence-interval comparison rather than a point estimate (see the entry below).
+- Follow-ups filed: CV-034 (push to a remote, watch CI go green once).
+
 ## 2026-08-07 · CV-002 · feat: CI pipeline — draft on `cv/002-ci-pipeline`, not merged (session: claude-code)
 - Shipped (unmerged): spec `specs/002-ci-pipeline.md`; `.github/workflows/ci.yml` (4 jobs — L0/L1 on 3 platforms, L2 on unix, L3 + workflow lint on ubuntu); `ci/bench_gate.py` + `ci/coldstart_gate.py`; justfile gains `lock-check`, `bench-baseline`, `bench-gate`, `perf-gate-selftest`, `lint-workflows`.
 - Surprise (real bug, not a CI detail): `cargo bench --workspace` runs libtest's harness for every lib/bin/test target alongside the criterion benches, and libtest rejects `--save-baseline` — the regression gate failed the first time it ran for real. `--benches` doesn't exclude them; `bench = false` per target does. This was invisible until now because `just bench` passes no arguments, so those harnesses ran zero benchmarks and exited 0 — the recipe looked green while benchmarking nothing.

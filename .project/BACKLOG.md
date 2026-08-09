@@ -5,7 +5,8 @@ Format: `- [ ] CV-<id> (<tags>, <milestone>) <summary>`. IDs are permanent. Prio
 ## Now (M0 — Foundation)
 
 - [x] CV-001 (infra, M0) Scaffold cargo workspace: cv-app, cv-ui, cv-core, cv-vcs, cv-watch, cv-syntax, cv-bridge. justfile with check/test/snapshot/bench targets.
-- [ ] CV-002 (infra, M0) CI pipeline: fmt, clippy -D warnings, test, criterion regression gate, hyperfine cold-start gate (budgets from docs/ARCHITECTURE.md §4). Spec: specs/002-ci-pipeline.md. Drafted on `cv/002-ci-pipeline`; needs spec approval + a GitHub remote before it can be proven.
+- [x] CV-002 (infra, M0) CI pipeline: fmt, clippy -D warnings, test, criterion regression gate, hyperfine cold-start gate (budgets from docs/ARCHITECTURE.md §4). Spec: specs/002-ci-pipeline.md. Merged; every gate verified locally. The workflow itself is unproven until the repo has a GitHub remote — see CV-034.
+- [ ] CV-034 (infra, M0) Push to a GitHub remote and watch CI go green once. Until then the ladder is enforced only by whoever remembers to run `just ci`, and the workflow in `.github/` has never executed. Blocks CV-002 being real.
 - [ ] CV-003 (core, M0) Elm-style reducer skeleton in cv-core with event/effect types + first property tests.
 - [ ] CV-004 (ui, M0) File tree widget + virtualized code view with tree-sitter highlighting; j/k/Tab/?/q.
 - [ ] CV-005 (test, M0) TestBackend snapshot harness + first PTY e2e test (expectrl) in CI.
