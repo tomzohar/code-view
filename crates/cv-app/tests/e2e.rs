@@ -6,6 +6,16 @@
 //!
 //! The scenario suite proper (fixture repos, scripted key sequences, screen
 //! assertions) lands with CV-005; this is the harness smoke test.
+//!
+//! Unix-only, and that `cfg` has to live here rather than only in the CI
+//! matrix. `.github/workflows/ci.yml` already keeps the L2 job off Windows —
+//! expectrl's ConPTY support is the least mature part of that crate — but these
+//! are ordinary `#[test]`s, so `cargo test --workspace` picked them up inside
+//! the L0+L1 job on Windows regardless and failed there. Restoring Windows PTY
+//! coverage is CV-030; until then the real scope is declared in one place
+//! instead of being half-enforced by a job matrix.
+
+#![cfg(unix)]
 
 use std::path::PathBuf;
 

@@ -5,8 +5,8 @@ Format: `- [ ] CV-<id> (<tags>, <milestone>) <summary>`. IDs are permanent. Prio
 ## Now (M0 — Foundation)
 
 - [x] CV-001 (infra, M0) Scaffold cargo workspace: cv-app, cv-ui, cv-core, cv-vcs, cv-watch, cv-syntax, cv-bridge. justfile with check/test/snapshot/bench targets.
-- [x] CV-002 (infra, M0) CI pipeline: fmt, clippy -D warnings, test, criterion regression gate, hyperfine cold-start gate (budgets from docs/ARCHITECTURE.md §4). Spec: specs/002-ci-pipeline.md. Merged; every gate verified locally. The workflow itself is unproven until the repo has a GitHub remote — see CV-034.
-- [ ] CV-034 (infra, M0) Push to a GitHub remote and watch CI go green once. Until then the ladder is enforced only by whoever remembers to run `just ci`, and the workflow in `.github/` has never executed. Blocks CV-002 being real.
+- [x] CV-002 (infra, M0) CI pipeline: fmt, clippy -D warnings, test, criterion regression gate, hyperfine cold-start gate (budgets from docs/ARCHITECTURE.md §4). Spec: specs/002-ci-pipeline.md.
+- [x] CV-034 (infra, M0) Push to a GitHub remote and watch CI go green once. Done: 7/7 jobs green on PR #1, with the criterion and cold-start gates both demonstrably running rather than skipping.
 - [ ] CV-003 (core, M0) Elm-style reducer skeleton in cv-core with event/effect types + first property tests.
 - [ ] CV-004 (ui, M0) File tree widget + virtualized code view with tree-sitter highlighting; j/k/Tab/?/q.
 - [ ] CV-005 (test, M0) TestBackend snapshot harness + first PTY e2e test (expectrl) in CI.
@@ -40,6 +40,8 @@ Format: `- [ ] CV-<id> (<tags>, <milestone>) <summary>`. IDs are permanent. Prio
 - [ ] CV-031 [proposed] (infra) Cold-start gate against the 10k-file fixture from CV-006. ARCHITECTURE §4 specifies the 50 ms budget against that workload; CV-002 measures `cv --version`, which is a floor, not the budget.
 - [ ] CV-032 [proposed] (infra) Pin GitHub Actions by commit SHA rather than tag. Tags are mutable; do this before accepting external contributions.
 - [ ] CV-033 [proposed] (infra) L4 adversarial agent review in CI: fresh-context session reviews the PR diff against its spec and posts findings. Needs its own spec — prompt design, how findings get posted, cost control.
+- [ ] CV-035 [proposed] (core) Replace the `cv_core::VERSION` criterion benchmark with one that measures real reducer work, as part of CV-003. It currently times a constant at sub-nanosecond scale, so the L3 gate guards a number that cannot regress for any reason worth catching.
+- [ ] CV-036 [proposed] (infra) Branch protection on `main`: require the CI checks before merge. The gates are green but nothing yet stops a direct push that is red.
 - [ ] CV-027 [proposed] (infra) Add `cargo deny` (licence + advisory audit) to the ladder — an MIT project shipping static binaries should assert its dependency licences.
 - [ ] CV-028 [proposed] (infra) Bundle tree-sitter grammars with lazy loading; `cv_syntax::grammar_count()` returns 0 until then.
 - [ ] CV-024 [proposed] (ux) Kitty/sixel image rendering for image diffs.

@@ -2,6 +2,15 @@
 
 Newest entries at top. Format in MEMORY.md.
 
+## 2026-08-09 · CV-034 · fix: CI proven green on a real runner (session: claude-code)
+- Shipped: 7/7 jobs green on PR #1 — L0/L1 across ubuntu/macos/windows, L2 on unix, L3, workflow lint. First execution of `.github/workflows/ci.yml` ever, since the repo had no remote until now.
+- Three failures across the first two runs, and **not one of them was reproducible on a dev machine.** That is the whole argument for the rung.
+- The PTY e2e tests are ordinary `#[test]`s, so `cargo test --workspace` ran them inside the L0+L1 job on Windows — the platform the L2 job matrix deliberately excludes. A job matrix cannot scope a test that a different job also runs; `#![cfg(unix)]` on the test crate can. Windows PTY coverage stays CV-030.
+- `taiki-e/install-action` has no actionlint recipe and fell back to cargo-binstall, which cannot install a Go binary that was never published to crates.io. Now pulls the pinned upstream release binary.
+- The one that mattered: **the criterion gate flaked on its first real PR** — +33.2% on `cv_core::VERSION` in a PR touching no `cv-core` code. Baseline and candidate had been measured on different runners, and GitHub's shared runners differ by CPU generation; on a nanosecond benchmark that hardware gap dwarfs any regression worth catching. Replaced the cached-baseline design with `bench-gate-ci`, which benchmarks the merge base and HEAD on one machine, back to back. Same comparison, same 5% threshold, and it read +0.3% locally where the cross-machine version read +33.2%. The threshold was never touched: the flaw was the measurement, not the bar.
+- Worth remembering: the CV-002 session reasoned explicitly about runner noise and still shipped a gate that flaked on contact, because the noise it modelled was within-machine variance and the noise that bit was between-machine. A gate is a hypothesis until a real runner has argued with it.
+- Follow-ups filed: CV-035 (the benchmark times a constant at sub-nanosecond scale — replace it during CV-003), CV-036 (branch protection; nothing yet stops a red direct push to main).
+
 ## 2026-08-09 · CV-002 · integrate: CI pipeline merged to main (session: claude-code)
 - Supersedes the entry below, which was written while the work was still an unmerged draft. `cv/002-ci-pipeline` rebased onto main, every rung run locally and green — `lock-check`, `check` (fmt/clippy/6 tests), `lint-workflows` (actionlint clean), `e2e` (2 PTY tests), `perf-gate-selftest`, `coldstart` (1.9 ms ± 0.3 against the 50 ms budget), and the real `bench-baseline` → `bench-gate` round trip. Worktree and branch deleted.
 - Fixed a permanent-ID collision: the draft and a concurrent main-branch commit both claimed CV-029. Main's (repo layout vs. skill defaults) keeps the number; the draft's L4 adversarial review became CV-033. Renumbering touched the draft's own PROGRESS line — the one edit to history this session, made before it merged, because a duplicate permanent ID is worse than a corrected draft.

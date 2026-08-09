@@ -53,10 +53,38 @@ e2e:
 bench:
     cargo bench --workspace --benches
 
-# CI runs this on main; run it locally before optimising to get a "before".
+# Run this locally before optimising, to get a "before".
 # Save the current numbers as the comparison baseline.
 bench-baseline NAME="main":
     cargo bench --workspace --benches -- --save-baseline {{ NAME }}
+
+# L3 gate as CI runs it: benchmark BASE and this revision on the *same machine*,
+# back to back, then compare.
+#
+# The obvious design — cache a baseline from main, restore it on PRs — is what
+# CI shipped first, and it flaked on its first real run: +33% on a benchmark the
+# PR did not touch. Shared runners differ by CPU generation, and on a
+# nanosecond-scale benchmark that hardware gap dwarfs any regression worth
+# catching. Measuring both sides on one machine is the only comparison that
+# means anything, and a flaky gate is a P1 bug (docs/SDLC.md §1).
+bench-gate-ci BASE:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if ! git diff --quiet HEAD || ! git diff --cached --quiet; then
+        echo "bench-gate-ci: refusing to run with a dirty working tree —" >&2
+        echo "  this recipe checks out {{ BASE }} and would discard your changes." >&2
+        exit 2
+    fi
+    head=$(git rev-parse HEAD)
+    trap 'git checkout --quiet --force "$head"' EXIT
+    git checkout --quiet --force --detach "{{ BASE }}"
+    echo "bench-gate-ci: benchmarking base {{ BASE }}"
+    cargo bench --workspace --benches -- --save-baseline base
+    git checkout --quiet --force "$head"
+    trap - EXIT
+    echo "bench-gate-ci: benchmarking candidate $head"
+    cargo bench --workspace --benches -- --save-baseline pr
+    python3 ci/bench_gate.py --baseline base --candidate pr
 
 # The 5% threshold and the significance test live in ci/bench_gate.py.
 # L3 gate: bench this revision and fail on a regression against the baseline.
