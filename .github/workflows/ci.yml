@@ -23,8 +23,8 @@ permissions:
 
 concurrency:
   group: ci-${{ github.ref }}
-  # Superseded PR runs are wasted work; superseded main runs still seed the
-  # criterion baseline, so they run to completion.
+  # Superseded PR runs are wasted work. Runs on main are the record of whether
+  # each merged commit was green, so they are never cancelled.
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 env:
@@ -86,7 +86,10 @@ jobs:
     name: L3 performance budgets
     runs-on: ubuntu-latest
     steps:
+      # The gate benchmarks the merge base too, so the history has to reach it.
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Install pinned toolchain
         run: rustup show
       - uses: Swatinem/rust-cache@v2
@@ -102,35 +105,19 @@ jobs:
       - name: Cold-start budget (ARCHITECTURE.md §4)
         run: just coldstart
 
-      # Criterion needs something to compare against. Pushes to main save a
-      # baseline; PRs restore the most recent one. On the very first run there
-      # is none, and the gate says so loudly and passes — failing closed would
-      # block the push that seeds it.
-      - name: Restore criterion baseline from main
-        uses: actions/cache/restore@v4
-        with:
-          path: target/criterion
-          key: criterion-main-${{ runner.os }}-${{ github.sha }}
-          restore-keys: |
-            criterion-main-${{ runner.os }}-
-
-      # The regression gate runs where merges are decided. Pushes to main only
-      # refresh the baseline: re-gating post-merge would either duplicate the
-      # PR's verdict or compare main against itself.
+      # Both sides of the comparison are measured here, on this runner, back to
+      # back — see the `bench-gate-ci` recipe for why anything else flakes.
       - name: Criterion regression gate
         if: github.event_name == 'pull_request'
-        run: just bench-gate
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: just bench-gate-ci "$BASE_SHA"
 
-      - name: Refresh criterion baseline
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: just bench-baseline
-
-      - name: Save criterion baseline
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: actions/cache/save@v4
-        with:
-          path: target/criterion
-          key: criterion-main-${{ runner.os }}-${{ github.sha }}
+      # Nothing to compare against post-merge, but the benches must still build
+      # and run — a bench that stops compiling is invisible until the next PR.
+      - name: Benchmarks still run
+        if: github.event_name == 'push'
+        run: just bench
 
   workflows:
     name: Workflow lint
